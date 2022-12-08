@@ -2,7 +2,7 @@ from github import Github
 import pandas as pd
 
 # Get the repository
-g = Github("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")
+g = Github("<GIT_ACCESS_TOKEN")
 
 repo = g.get_repo("project-chip/connectedhomeip")
 
