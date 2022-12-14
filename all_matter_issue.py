@@ -22,6 +22,9 @@ writer = pd.ExcelWriter(filename)
 for repo in repo_list:
     repo_name = repo.name
     issues = repo.get_issues(state="all")
-    df = pd.DataFrame([[repo_name, issue.number, issue.created_at, issue.state, issue.title, issue.closed_at, issue.html_url] for issue in issues], columns=["Repo Name", "Issue ID", "Created Date", "State", "Title", "Closed Date", "URL"])
+    df = pd.DataFrame([[repo_name, issue.number, issue.labels, issue.created_at, issue.state, issue.title, issue.closed_at, issue.html_url] for issue in issues], columns=["Repo Name", "Issue ID", "Label", "Created Date", "State", "Title", "Closed Date", "URL"])
+    df["Label"] = df["Label"].apply(lambda x: [label.name for label in x])
+    df["Label"] = df["Label"].apply(lambda x: '"{0}"'.format(", ".join(x)))
     df.to_excel(writer, sheet_name=repo_name, index=False)
 writer.close()
+print("Issue is saved in :", filename)
