@@ -3,7 +3,7 @@ import github
 import pandas as pd
 from oauth2client.service_account import ServiceAccountCredentials
 
-g = github.Github("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")
+g = github.Github("<TOKEN>")
 repo_list = [g.get_repo("project-chip/connectedhomeip"), g.get_repo("CHIP-Specifications/chip-test-plans"),
              g.get_repo("CHIP-Specifications/chip-test-scripts")]
 
