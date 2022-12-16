@@ -3,7 +3,7 @@ import github
 import pandas as pd
 from oauth2client.service_account import ServiceAccountCredentials
 
-g = github.Github("<TOKEN>")
+g = github.Github("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")
 repo_list = [g.get_repo("project-chip/connectedhomeip"), g.get_repo("CHIP-Specifications/chip-test-plans"),
              g.get_repo("CHIP-Specifications/chip-test-scripts")]
 
@@ -20,11 +20,20 @@ for repo in repo_list:
                                "URL"])
     df["Label"] = df["Label"].apply(lambda x: '"{0}"'.format(", ".join([label.name for label in x])) if x else None)
     df["Created Date"] = df["Created Date"].apply(lambda x: x.strftime('%Y-%m-%d %H:%M:%S'))
-    df["Closed Date"] = df["Closed Date"].apply(lambda x: x.strftime('%Y-%m-%d %H:%M:%S') if x and not pd.isnull(x) else None)
+    df["Closed Date"] = df["Closed Date"].apply(
+        lambda x: x.strftime('%Y-%m-%d %H:%M:%S') if x and not pd.isnull(x) else None)
     df.to_csv("{}_issues.csv".format(repo_name), index=False)
     sh = gc.open("Matter_issue")
     worksheet = sh.add_worksheet(title="{}_issues".format(repo_name), rows=str(len(df) + 1), cols=8)
-    cell_list = worksheet.range(1, 1, len(df) + 1, 8)
+    cell_list = worksheet.range(1, 1, 1, 8)
+    for t, cell in zip(df.columns, cell_list):
+        cell.value = t
+        cell.bold = True
+        cell.horizontal_alignment = 'center'
+        cell.top = 1
+    worksheet.update_cells(cell_list)
+    cell_list = worksheet.range(2, 1, len(df) + 1, 8)
     for t, cell in zip(df.values.flatten(), cell_list):
         cell.value = t
     worksheet.update_cells(cell_list)
+print("Sheet is updated")
