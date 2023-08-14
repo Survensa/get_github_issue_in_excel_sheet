@@ -1,17 +1,30 @@
+import time
 import github
 import gspread
 import pandas as pd
 from oauth2client.service_account import ServiceAccountCredentials
+import yaml
 
-g = github.Github("<TOKEN>")
-repo_list = [g.get_repo("project-chip/connectedhomeip"), g.get_repo("CHIP-Specifications/chip-test-plans"), g.get_repo("CHIP-Specifications/chip-test-scripts"), g.get_repo("CHIP-Specifications/chip-certification-tool")]
+def format_duration(seconds):
+    hours, remainder = divmod(seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    return f"{int(hours):02d}:{int(minutes):02d}:{int(seconds):02d}"
+
+with open("C:/Users/suraj/Suraj_Personal/Auto/Gsheetissue/repos.yml", "r") as yaml_file:
+    yaml_data = yaml.safe_load(yaml_file)
+repo_names = yaml_data["repos"]
+
+g = github.Github("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")
+repo_list = [g.get_repo(repo_name) for repo_name in repo_names]
 
 scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-credentials = ServiceAccountCredentials.from_json_keyfile_name('C:/Users/suraj/Suraj_Personal/Auto/Gsheetissue/Matterissue.json',scope)
+credentials = ServiceAccountCredentials.from_json_keyfile_name('C:/Users/suraj/Suraj_Personal/Auto/Gsheetissue/Matterissue.json', scope)
 gc = gspread.authorize(credentials)
 
 for repo in repo_list:
     repo_name = repo.name
+    start_time = time.time()
+    print("Fetching issues for repo:", repo_name)
     issues = repo.get_issues(state="all")
     df = pd.DataFrame([[repo_name, issue.number, issue.state, issue.title, issue.user.login, issue.labels, issue.created_at,
                         issue.closed_at, issue.html_url] for issue in issues],
@@ -21,8 +34,11 @@ for repo in repo_list:
     df["Created Date"] = df["Created Date"].apply(lambda x: x.strftime('%Y-%m-%d %H:%M:%S'))
     df["Closed Date"] = df["Closed Date"].apply(
         lambda x: x.strftime('%Y-%m-%d %H:%M:%S') if x and not pd.isnull(x) else None)
-
-    print("Processing repo {}".format(repo_name))
+    end_time = time.time()
+    duration_seconds = end_time - start_time
+    duration = format_duration(duration_seconds)
+    print(f"Fetch Completed for repo {repo_name}: {duration}")
+    print("Processing issues for repo:", repo_name)
     sh = gc.open("Matterissues")
     worksheet_name = "{}_issues".format(repo_name)
     try:
