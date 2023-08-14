@@ -1,12 +1,17 @@
 import github
 import pandas as pd
 from datetime import datetime
+import yaml
 
 # Get the repositories
-g = github.Github("<GIT_ACCESS_TOKEN>")
-repo_list = [g.get_repo("project-chip/connectedhomeip"), g.get_repo("CHIP-Specifications/chip-test-plans"), g.get_repo("CHIP-Specifications/chip-test-scripts")]
+with open("repos.yml", "r") as yaml_file:
+    yaml_data = yaml.safe_load(yaml_file)
+repo_names = yaml_data["repos"]
 
-filename = "matter_issue_" + datetime.now().strftime("%m_%d_%Y_%H_%M_%S") + ".xlsx"
+g = github.Github("<GIT_ACCESS_TOKEN")
+repo_list = [g.get_repo(repo_name) for repo_name in repo_names]
+
+filename = "Github_Issue_" + datetime.now().strftime("%m_%d_%Y_%H_%M_%S") + ".xlsx"
 
 # Get all issues in single sheet
 #data = pd.DataFrame()
