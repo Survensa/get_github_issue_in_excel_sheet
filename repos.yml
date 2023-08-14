@@ -1,0 +1,10 @@
+# YAML file for specifying repositories to fetch issues from
+
+repos:
+  # List of repositories in the format "owner/name"
+  - <owner-name>/<repository-name>
+
+  # Add more repositories if needed
+  # - owner-name/repository-name
+  # ...
+
