@@ -20,7 +20,7 @@ service_account_json = os.environ.get("SERVICE_ACCOUNT_JSON")
 g = github.Github(github_token)
 
 # Load repository names from YAML file
-with open("C:/Users/suraj/Suraj_Personal/Auto/Gsheetissue/repos.yml", "r") as yaml_file:
+with open("src/repos.yml", "r") as yaml_file:
     yaml_data = yaml.safe_load(yaml_file)
 repo_names = yaml_data["repos"]
 
