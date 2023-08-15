@@ -32,10 +32,11 @@ scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/au
 credentials = ServiceAccountCredentials.from_json_keyfile_dict(service_account_json_dict, scope)
 gc = gspread.authorize(credentials)
 
+repo_list = [g.get_repo(repo_name) for repo_name in repo_names]
 for repo in repo_list:
     repo_name = repo.name
     start_time = time.time()
-    print("Fetching issues for repo:", repo_name)
+    print("Fetching issues for repo : ", repo_name)
     issues = repo.get_issues(state="all")
     df = pd.DataFrame([[repo_name, issue.number, issue.state, issue.title, issue.user.login, issue.labels, issue.created_at,
                         issue.closed_at, issue.html_url] for issue in issues],
@@ -48,7 +49,7 @@ for repo in repo_list:
     end_time = time.time()
     duration_seconds = end_time - start_time
     duration = format_duration(duration_seconds)
-    print(f"Fetch Completed for repo {repo_name}: {duration}")
+    print(f"Fetch Completed for repo {repo_name} : {duration}")
     sh = gc.open("Matterissues")
     worksheet_name = "{}_issues".format(repo_name)
     try:
