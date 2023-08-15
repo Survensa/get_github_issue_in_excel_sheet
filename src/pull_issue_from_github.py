@@ -12,17 +12,18 @@ def format_duration(seconds):
     minutes, seconds = divmod(remainder, 60)
     return f"{int(hours):02d}:{int(minutes):02d}:{int(seconds):02d}"
 
+# Load repository names from YAML file
+with open("src/repos.yml", "r") as yaml_file:
+    yaml_data = yaml.safe_load(yaml_file)
+repo_names = yaml_data["repos"]
+
 # Access GitHub token and Service Account JSON from environment variables
 github_token = os.environ.get("GITHUB_TOKEN")
 service_account_json = os.environ.get("SERVICE_ACCOUNT_JSON")
 
 # Use github_token in your GitHub API authentication
 g = github.Github(github_token)
-
-# Load repository names from YAML file
-with open("src/repos.yml", "r") as yaml_file:
-    yaml_data = yaml.safe_load(yaml_file)
-repo_names = yaml_data["repos"]
+repo_list = [g.get_repo(repo_name) for repo_name in repo_names]
 
 # Load Service Account JSON from environment variable
 service_account_json_dict = json.loads(service_account_json)
@@ -32,7 +33,6 @@ scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/au
 credentials = ServiceAccountCredentials.from_json_keyfile_dict(service_account_json_dict, scope)
 gc = gspread.authorize(credentials)
 
-repo_list = [g.get_repo(repo_name) for repo_name in repo_names]
 for repo in repo_list:
     repo_name = repo.name
     start_time = time.time()
