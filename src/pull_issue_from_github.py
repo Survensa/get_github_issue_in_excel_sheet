@@ -32,8 +32,7 @@ scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/au
 credentials = ServiceAccountCredentials.from_json_keyfile_dict(service_account_json_dict, scope)
 gc = gspread.authorize(credentials)
 
-for repo_name in repo_names:
-    repo = g.get_repo(repo_name)
+for repo in repo_list:
     repo_name = repo.name
     start_time = time.time()
     print("Fetching issues for repo:", repo_name)
@@ -50,7 +49,6 @@ for repo_name in repo_names:
     duration_seconds = end_time - start_time
     duration = format_duration(duration_seconds)
     print(f"Fetch Completed for repo {repo_name}: {duration}")
-    print("Processing issues for repo:", repo_name)
     sh = gc.open("Matterissues")
     worksheet_name = "{}_issues".format(repo_name)
     try:
@@ -58,7 +56,9 @@ for repo_name in repo_names:
         worksheet.clear()
     except gspread.exceptions.WorksheetNotFound:
         worksheet = sh.add_worksheet(title=worksheet_name, rows=str(len(df) + 1), cols=9)
+        print(f"Created a worksheet named {worksheet} for the repo name {repo_name}")
     cell_list = worksheet.range(1, 1, 1, 9)
+    print(f"Processing {repo_name} issues in the sheet {worksheet}")
     worksheet.format('A1:I1', {'textFormat': {'bold': True, 'fontFamily': 'Times New Roman'},
                                'horizontalAlignment': 'CENTER'})
     worksheet.format('A2:I', {'textFormat': {'fontFamily': 'Times New Roman'}, 'wrapStrategy': 'WRAP',
@@ -72,4 +72,5 @@ for repo_name in repo_names:
     for t, cell in zip(df.values.flatten(), cell_list):
         cell.value = t
     worksheet.update_cells(cell_list)
+    print(f"Updated the sheet {worksheet} with {repo_name} repo issues")
 print("Sheet is updated")
