@@ -1,11 +1,11 @@
 name: pull_issue_from_github
 
 on:
-# Run automatically every 6 hours
+  # Run automatically every 6 hours
   schedule:
     - cron: "0 */6 * * *"
 
-# allows to manually run the job at any time
+  # Allows manually running the job at any time
   workflow_dispatch:
 
 jobs:
@@ -29,7 +29,6 @@ jobs:
       - name: Run code
         run: |
           python -u src/pull_issue_from_github.py
-
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SERVICE_ACCOUNT_JSON: ${{ secrets.SERVICE_ACCOUNT_JSON }}
