@@ -56,6 +56,7 @@ for repo_name in repo_names:
         duration_seconds = end_time - start_time
         duration = format_duration(duration_seconds)
         print(f"Fetch Completed for repo {repo_name}: {duration}")
+        print("Processing issues for repo:", repo_name)
         
         # Introduce a delay to avoid exceeding the GitHub API rate limit
         time.sleep(api_request_delay)
