@@ -1,9 +1,9 @@
 name: pull_issue_from_github
 
 on:
-# Run automatically every 3 hours
+# Run automatically every 6 hours
   schedule:
-    - cron: "0 */3 * * *"
+    - cron: "0 */6 * * *"
 
 # allows to manually run the job at any time
   workflow_dispatch:
