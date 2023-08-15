@@ -23,7 +23,6 @@ service_account_json = os.environ.get("SERVICE_ACCOUNT_JSON")
 
 # Use github_token in your GitHub API authentication
 g = github.Github(github_token)
-repo_list = [g.get_repo(repo_name) for repo_name in repo_names]
 
 # Load Service Account JSON from environment variable
 service_account_json_dict = json.loads(service_account_json)
@@ -33,7 +32,8 @@ scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/au
 credentials = ServiceAccountCredentials.from_json_keyfile_dict(service_account_json_dict, scope)
 gc = gspread.authorize(credentials)
 
-for repo in repo_list:
+for repo_name in repo_names:
+    repo = g.get_repo(repo_name)
     repo_name = repo.name
     start_time = time.time()
     print("Fetching issues for repo : ", repo_name)
