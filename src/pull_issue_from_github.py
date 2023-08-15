@@ -1,6 +1,6 @@
 import time
 import os
-import github
+from github import Github
 import gspread
 import pandas as pd
 from oauth2client.service_account import ServiceAccountCredentials
@@ -19,7 +19,7 @@ repo_names = yaml_data["repos"]
 github_token = os.environ.get("GITHUB_TOKEN")
 service_account_json = os.environ.get("SERVICE_ACCOUNT_JSON")
 
-g = github.Github(github_token)
+g = Github(github_token)  # Use PyGitHub library
 service_account_json_dict = json.loads(service_account_json)
 scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
 credentials = ServiceAccountCredentials.from_json_keyfile_dict(service_account_json_dict, scope)
