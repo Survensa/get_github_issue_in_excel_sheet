@@ -8,7 +8,7 @@ with open("repos.yml", "r") as yaml_file:
     yaml_data = yaml.safe_load(yaml_file)
 repo_names = yaml_data["repos"]
 
-g = github.Github("<GIT_ACCESS_TOKEN")
+g = github.Github("<GIT_ACCESS_TOKEN>")
 repo_list = [g.get_repo(repo_name) for repo_name in repo_names]
 
 filename = "Github_Issue_" + datetime.now().strftime("%m_%d_%Y_%H_%M_%S") + ".xlsx"
