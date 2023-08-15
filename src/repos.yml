@@ -2,7 +2,7 @@
 
 repos:
   # List of repositories in the format "owner/name"
-  # - project-chip/connectedhomeip
+  - project-chip/connectedhomeip
   - CHIP-Specifications/chip-test-plans
   - CHIP-Specifications/chip-test-scripts
   - CHIP-Specifications/chip-certification-tool
