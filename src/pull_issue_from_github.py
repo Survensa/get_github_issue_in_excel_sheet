@@ -36,14 +36,41 @@ for repo_name in repo_names:
     print("Fetching issues for repo:", repo_name)
     issues_url = f"{api_base_url}/repos/{repo_name}/issues"
     issues_response = requests.get(issues_url, headers=headers)
+    
+    if issues_response.status_code != 200:
+        print(f"Failed to fetch issues for repo {repo_name}. Status code: {issues_response.status_code}")
+        continue  # Skip to the next repo if there's an issue
+    
     issues_data = issues_response.json()
     
-    df = pd.DataFrame([
-        [repo_name, issue['number'], issue['state'], issue['title'], issue['user']['login'],
-         ", ".join([label['name'] for label in issue['labels']]),
-         issue['created_at'], issue.get('closed_at', None), issue['html_url']] for issue in issues_data],
-        columns=["Repo Name", "Issue ID", "State", "Title", "Author", "Label", "Created Date", "Closed Date", "URL"])
+    if not isinstance(issues_data, list):
+        print(f"Issues data for repo {repo_name} is not in the expected format.")
+        continue
     
+    df_rows = []
+    
+    for issue in issues_data:
+        if not isinstance(issue, dict):
+            print(f"Issue data in repo {repo_name} is not in the expected format.")
+            continue
+        
+        issue_number = issue.get('number')
+        issue_state = issue.get('state')
+        issue_title = issue.get('title')
+        user_login = issue.get('user', {}).get('login')
+        
+        labels = issue.get('labels', [])
+        label_names = ", ".join([label.get('name', '') for label in labels])
+        
+        created_at = issue.get('created_at', '')
+        closed_at = issue.get('closed_at', None)
+        html_url = issue.get('html_url', '')
+        
+        df_rows.append([repo_name, issue_number, issue_state, issue_title, user_login,
+                        label_names, created_at, closed_at, html_url])
+    
+    df = pd.DataFrame(df_rows, columns=["Repo Name", "Issue ID", "State", "Title", "Author", "Label", "Created Date", "Closed Date", "URL"])
+        
     df["Label"] = df["Label"].apply(lambda x: '"{0}"'.format(", ".join([label.name for label in x])) if x else None)
     df["Created Date"] = df["Created Date"].apply(lambda x: x.strftime('%Y-%m-%d %H:%M:%S'))
     df["Closed Date"] = df["Closed Date"].apply(
