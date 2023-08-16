@@ -1,34 +1,31 @@
 name: pull_issue_from_github
 
 on:
-  # Run automatically every 6 hours
   #schedule:
   #  - cron: "0 */6 * * *"
-
-  # Allows manually running the job at any time
   workflow_dispatch:
 
 jobs:
-  run_code:
+  fetch-issues:
     runs-on: ubuntu-latest
+    
+    env:
+      GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+      SERVICE_ACCOUNT_JSON: ${{ secrets.SERVICE_ACCOUNT_JSON }}
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.x
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.x
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install PyGithub gspread pandas pyyaml oauth2client
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install gspread pandas oauth2client requests PyYAML PyGithub
 
-      - name: Run code
-        run: |
-          python -u src/pull_issue_from_github.py
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SERVICE_ACCOUNT_JSON: ${{ secrets.SERVICE_ACCOUNT_JSON }}
+    - name: Run Python script
+      run: python -u src/pull_issue_from_github.py
