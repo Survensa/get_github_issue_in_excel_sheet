@@ -1,6 +1,6 @@
 import os
 import time
-import github
+import requests
 import gspread
 import pandas as pd
 from oauth2client.service_account import ServiceAccountCredentials
@@ -12,18 +12,19 @@ def format_duration(seconds):
     minutes, seconds = divmod(remainder, 60)
     return f"{int(hours):02d}:{int(minutes):02d}:{int(seconds):02d}"
 
-# Fetch GitHub issues for each repository
-def fetch_github_issues(github_token, repo_names):
-    g = github.Github(github_token)
-    repo_list = [g.get_repo(repo_name) for repo_name in repo_names]
-    issues_data = []
-    for repo in repo_list:
-        repo_name = repo.name
-        print("Fetching issues for repo:", repo_name)
-        issues = repo.get_issues(state="all")
-        issues_data.extend([[repo_name, issue.number, issue.state, issue.title, issue.user.login, issue.labels,
-                             issue.created_at, issue.closed_at, issue.html_url] for issue in issues])
-    return issues_data
+def fetch_issues_from_repo(repo_name, github_token):
+    api_url = f"https://api.github.com/repos/{repo_name}/issues"
+    headers = {
+        "Authorization": f"Bearer {github_token}",
+        "Accept": "application/vnd.github.v3+json"
+    }
+    
+    response = requests.get(api_url, headers=headers)
+    if response.status_code == 200:
+        return response.json()
+    else:
+        print(f"Error fetching issues from {repo_name}. Status code: {response.status_code}")
+        return []
 
 # Update Google Sheets with fetched issues data
 def update_google_sheets(issues_data, service_account_json):
@@ -51,7 +52,11 @@ if __name__ == "__main__":
     repo_names = yaml_data["repos"]
 
     github_token = os.environ.get("MY_GITHUB_TOKEN")
-    issues_data = fetch_github_issues(github_token, repo_names)
+
+    issues_data = {}
+    for repo_name in repo_names:
+        issues = fetch_issues_from_repo(repo_name, github_token)
+        issues_data[repo_name] = issues
 
     service_account_json = os.environ.get("SERVICE_ACCOUNT_JSON")
     update_google_sheets(issues_data, service_account_json)
