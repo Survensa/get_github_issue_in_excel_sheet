@@ -34,11 +34,23 @@ for repo_name in repo_names:
     print("Fetching issues for repo:", repo_name)
     issues = repo.get_issues(state="all")
 
-    df = pd.DataFrame([
-        [repo_name, issue.number, issue.state, issue.title, issue.user.login, issue.labels, issue.created_at,
-         issue.closed_at, issue.html_url] for issue in issues],
-        columns=["Repo Name", "Issue ID", "State", "Title", "Author", "Label", "Created Date", "Closed Date",
-                 "URL"])
+    issue_list = []  # Create an empty list to store issue dictionaries
+
+    for issue in issues:
+        issue_dict = {
+            "repo_name": repo_name,
+            "issue_id": issue.number,
+            "state": issue.state,
+            "title": issue.title,
+            "author": issue.user.login,
+            "labels": [label.name for label in issue.labels],
+            "created_date": issue.created_at,
+            "closed_date": issue.closed_at,
+            "url": issue.html_url
+        }
+        issue_list.append(issue_dict)
+
+    df = pd.DataFrame(issue_list, columns=["Repo Name", "Issue ID", "State", "Title", "Author", "Label", "Created Date", "Closed Date", "URL"])
     df["Label"] = df["Label"].apply(lambda x: '"{0}"'.format(", ".join([label.name for label in x])) if x else None)
     df["Created Date"] = df["Created Date"].apply(lambda x: x.strftime('%Y-%m-%d %H:%M:%S'))
     df["Closed Date"] = df["Closed Date"].apply(
