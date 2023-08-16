@@ -32,11 +32,10 @@ for repo_name in repo_names:
     repo_name = repo.name
     start_time = time.time()
     print("Fetching issues for repo:", repo_name)
-    issues = repo.get_issues(state="all")
-
+    
     issue_list = []  # Create an empty list to store issue dictionaries
-
-    for issue in issues:
+    
+    for issue in repo.get_issues(state="all"):
         issue_dict = {
             "repo_name": repo_name,
             "issue_id": issue.number,
