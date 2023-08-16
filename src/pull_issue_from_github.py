@@ -20,6 +20,7 @@ def fetch_issues_from_repo(repo_name, github_token):
     }
     
     response = requests.get(api_url, headers=headers)
+    print(f"API request response status code: {response.status_code}")
     if response.status_code == 200:
         return response.json()
     else:
