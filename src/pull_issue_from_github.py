@@ -39,21 +39,13 @@ for repo_name in repo_names:
     
     if issues_response.status_code != 200:
         print(f"Failed to fetch issues for repo {repo_name}. Status code: {issues_response.status_code}")
-        continue  # Skip to the next repo if there's an issue
+        continue
     
     issues_data = issues_response.json()
-    
-    if not isinstance(issues_data, list):
-        print(f"Issues data for repo {repo_name} is not in the expected format.")
-        continue
     
     df_rows = []
     
     for issue in issues_data:
-        if not isinstance(issue, dict):
-            print(f"Issue data in repo {repo_name} is not in the expected format.")
-            continue
-        
         issue_number = issue.get('number')
         issue_state = issue.get('state')
         issue_title = issue.get('title')
@@ -70,7 +62,7 @@ for repo_name in repo_names:
                         label_names, created_at, closed_at, html_url])
     
     df = pd.DataFrame(df_rows, columns=["Repo Name", "Issue ID", "State", "Title", "Author", "Label", "Created Date", "Closed Date", "URL"])
-        
+    
     df["Label"] = df["Label"].apply(lambda x: '"{0}"'.format(", ".join([label.name for label in x])) if x else None)
     df["Created Date"] = df["Created Date"].apply(lambda x: x.strftime('%Y-%m-%d %H:%M:%S'))
     df["Closed Date"] = df["Closed Date"].apply(
