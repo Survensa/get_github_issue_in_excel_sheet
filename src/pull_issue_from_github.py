@@ -16,7 +16,7 @@ with open("src/repos.yml", "r") as yaml_file:
     yaml_data = yaml.safe_load(yaml_file)
 repo_names = yaml_data["repos"]
 
-github_token = os.environ.get("GITHUB_TOKEN")
+github_token = os.environ.get("MY_GITHUB_TOKEN")
 service_account_json = os.environ.get("SERVICE_ACCOUNT_JSON")
 
 api_base_url = "https://api.github.com"
