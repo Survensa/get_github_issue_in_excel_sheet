@@ -1,8 +1,10 @@
 import time
+import os
 import github
 import gspread
 import pandas as pd
 from oauth2client.service_account import ServiceAccountCredentials
+import json
 import yaml
 
 def format_duration(seconds):
@@ -10,7 +12,7 @@ def format_duration(seconds):
     minutes, seconds = divmod(remainder, 60)
     return f"{int(hours):02d}:{int(minutes):02d}:{int(seconds):02d}"
 
-with open("C:/Users/suraj/Suraj_Personal/Auto/Gsheetissue/repos.yml", "r") as yaml_file:
+with open("src/repos.yml", "r") as yaml_file:
     yaml_data = yaml.safe_load(yaml_file)
 repo_names = yaml_data["repos"]
 
