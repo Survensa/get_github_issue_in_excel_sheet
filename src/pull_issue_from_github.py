@@ -71,21 +71,30 @@ def update_google_sheets(issues_data, service_account_json):
         
         print(f"Updated the sheet {worksheet_name} with {repo_name_only} repo issues")
 
+# ...
 if __name__ == "__main__":
     with open("repos.yml", "r") as yaml_file:
         yaml_data = yaml.safe_load(yaml_file)
+        print("Loaded YAML data:", yaml_data)
     repo_configs = yaml_data["repos"]
+    print("Repo configurations:", repo_configs)
 
     github_token = os.environ.get("MY_GITHUB_TOKEN")
+    print("GitHub Token:", github_token)
 
     issues_data = {}
     for repo_config in repo_configs:
-        owner = repo_config["owner"]  # Change "owner" to "owner" in your YAML
-        repo = repo_config["name"]    # Change "repo" to "name" in your YAML
+        print("Current repo config:", repo_config)
+        owner = repo_config["owner"]
+        repo = repo_config["name"]
+        print("Fetching issues for:", owner, repo)
         issues = fetch_issues_from_repo(owner, repo, github_token)
         issues_data[f"{owner}/{repo}"] = issues
 
     service_account_json = os.environ.get("SERVICE_ACCOUNT_JSON")
+    print("Service Account JSON:", service_account_json)
+    
     update_google_sheets(issues_data, service_account_json)
 
     print("Sheet is updated")
+
