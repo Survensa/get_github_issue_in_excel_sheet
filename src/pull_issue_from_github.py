@@ -1,96 +1,77 @@
+import time
 import os
-import requests
+import github
 import gspread
-import json
-import yaml
-import logging
-import http.client as http_client
+import pandas as pd
 from oauth2client.service_account import ServiceAccountCredentials
+import yaml
+import json
 
 def format_duration(seconds):
     hours, remainder = divmod(seconds, 3600)
     minutes, seconds = divmod(remainder, 60)
     return f"{int(hours):02d}:{int(minutes):02d}:{int(seconds):02d}"
 
-def fetch_issues_from_repo(owner, repo, github_token):
-    api_url = f"https://api.github.com/repos/{owner}/{repo}/issues"
-    headers = {
-        "Authorization": f"Bearer {github_token}",
-        "Accept": "application/vnd.github+json"
-    }
-    
-    response = requests.get(api_url, headers=headers)
-    print(f"API request response status code: {response.status_code}")
-    print(f"Response headers: {response.headers}")
-    
-    github_request_id = response.headers.get("X-GitHub-Request-Id")
-    print(f"GitHub Request ID: {github_request_id}")
-    
-    if response.status_code == 200:
-        return response.json()
-    else:
-        print(f"Error fetching issues from {owner}/{repo}. Status code: {response.status_code}")
-        return []
+with open("src/repos.yml", "r") as yaml_file:
+    yaml_data = yaml.safe_load(yaml_file)
+repo_infos = yaml_data["repos"]
 
-# Enable verbose logging for requests
-http_client.HTTPConnection.debuglevel = 1
-logging.basicConfig()
-logging.getLogger().setLevel(logging.DEBUG)
-requests_log = logging.getLogger("requests.packages.urllib3")
-requests_log.setLevel(logging.DEBUG)
-requests_log.propagate = True
+github_token = os.environ.get("GITHUB_TOKEN")
+service_account_json = os.environ.get("SERVICE_ACCOUNT_JSON")
 
-# Update Google Sheets with fetched issues data
-def update_google_sheets(issues_data, service_account_json):
-    service_account_json_dict = json.loads(service_account_json)
-    scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-    credentials = ServiceAccountCredentials.from_json_keyfile_dict(service_account_json_dict, scope)
-    gc = gspread.authorize(credentials)
+g = github.Github(github_token)
+service_account_json_dict = json.loads(service_account_json)
+scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+credentials = ServiceAccountCredentials.from_json_keyfile_dict(service_account_json_dict, scope)
+gc = gspread.authorize(credentials)
+
+api_request_delay = 60  # Adjust as needed, in seconds
+
+for repo_info in repo_infos:
+    owner = repo_info["owner"]
+    repo_name = repo_info["name"]
     
+    repo = g.get_repo(f"{owner}/{repo_name}")
+    start_time = time.time()
+    print("-" * 40)
+    print("Fetching issues for repo:", repo_name)
+    issues = repo.get_issues(state="all")
+
+    df = pd.DataFrame([
+        [repo_name, issue.number, issue.state, issue.title, issue.user.login, issue.labels, issue.created_at,
+         issue.closed_at, issue.html_url] for issue in issues],
+        columns=["Repo Name", "Issue ID", "State", "Title", "Author", "Label", "Created Date", "Closed Date",
+                 "URL"])
+    df["Label"] = df["Label"].apply(lambda x: '"{0}"'.format(", ".join([label.name for label in x])) if x else None)
+    df["Created Date"] = df["Created Date"].apply(lambda x: x.strftime('%Y-%m-%d %H:%M:%S'))
+    df["Closed Date"] = df["Closed Date"].apply(
+        lambda x: x.strftime('%Y-%m-%d %H:%M:%S') if x and not pd.isnull(x) else None)
+    end_time = time.time()
+    duration_seconds = end_time - start_time
+    duration = format_duration(duration_seconds)
+    print(f"Fetch Completed for repo {repo_name}: {duration}")
+    print("Processing issues for repo:", repo_name)
+
+    time.sleep(api_request_delay)
+
     sh = gc.open("Matterissues")
-    for repo_name, issues in issues_data.items():
-        repo_name_only = repo_name.split('/')[1]  # Extract repo name from "owner/repo"
-        worksheet_name = f"{repo_name_only}_issues"
-        try:
-            worksheet = sh.worksheet(worksheet_name)
-            worksheet.clear()
-        except gspread.exceptions.WorksheetNotFound:
-            worksheet = sh.add_worksheet(title=worksheet_name, rows=str(len(issues) + 1), cols=9)
-            print(f"Created a worksheet named {worksheet_name} for the repo name {repo_name_only}")
-        
-        headers = ["Repo Name", "Issue ID", "State", "Title", "Author", "Label", "Created Date", "Closed Date", "URL"]
-        data_rows = []
-        for issue in issues:
-            data_rows.append([repo_name_only, issue.get("number"), issue.get("state"), issue.get("title"),
-                              issue.get("user", {}).get("login"), ", ".join(label.get("name") for label in issue.get("labels", [])),
-                              issue.get("created_at"), issue.get("closed_at"), issue.get("html_url")])
-        
-        worksheet.append_row(headers)
-        for row in data_rows:
-            worksheet.append_row(row)
-        
-        print(f"Updated the sheet {worksheet_name} with {repo_name_only} repo issues")
-
-if __name__ == "__main__":
-    with open("repos.yml", "r") as yaml_file:
-        yaml_data = yaml.safe_load(yaml_file)
-        print("Loaded YAML data:", yaml_data)
-    repo_configs = yaml_data["repos"]
-    print("Repo configurations:", repo_configs)
-
-    github_token = os.environ.get("MY_GITHUB_TOKEN")
+    worksheet_name = "{}_issues".format(repo_name)
+    try:
+        worksheet = sh.worksheet(worksheet_name)
+        worksheet.clear()
+    except gspread.exceptions.WorksheetNotFound:
+        worksheet = sh.add_worksheet(title=worksheet_name, rows=str(len(df) + 1), cols=9)
+        print(f"Created a worksheet named {worksheet_name} for the repo name {repo_name}")
+    cell_list = worksheet.range(1, 1, 1, 9)
+    for t, cell in zip(df.columns, cell_list):
+        cell.value = t
+    worksheet.update_cells(cell_list)
+    cell_list = worksheet.range(2, 1, len(df) + 1, 9)
+    for t, cell in zip(df.values.flatten(), cell_list):
+        cell.value = t
+    worksheet.update_cells(cell_list)
+    print(f"Updated the sheet {worksheet_name} with {repo_name} repo issues")
     
-    issues_data = {}
-    for repo_config in repo_configs:
-        print("Current repo config:", repo_config)
-        owner = repo_config["owner"]
-        repo = repo_config["name"]
-        print("Fetching issues for:", owner, repo)
-        issues = fetch_issues_from_repo(owner, repo, github_token)
-        issues_data[f"{owner}/{repo}"] = issues
+    time.sleep(api_request_delay)
 
-    service_account_json = os.environ.get("SERVICE_ACCOUNT_JSON")
-        
-    update_google_sheets(issues_data, service_account_json)
-
-    print("Sheet is updated")
+print("All repos processed")
