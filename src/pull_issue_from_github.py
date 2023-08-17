@@ -74,4 +74,5 @@ for repo_info in repo_infos:
     
     time.sleep(api_request_delay)
 
+print("-" * 40)
 print("All repos processed")
