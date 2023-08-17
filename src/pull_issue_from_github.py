@@ -16,7 +16,7 @@ def fetch_issues_from_repo(owner, repo, github_token):
     api_url = f"https://api.github.com/repos/{owner}/{repo}/issues"
     headers = {
         "Authorization": f"Bearer {github_token}",
-        "Accept": "application/vnd.github.v3+json"
+        "Accept": "application/vnd.github+json"
     }
     
     response = requests.get(api_url, headers=headers)
@@ -80,8 +80,7 @@ if __name__ == "__main__":
     print("Repo configurations:", repo_configs)
 
     github_token = os.environ.get("MY_GITHUB_TOKEN")
-    print("GitHub Token:", github_token)
-
+    
     issues_data = {}
     for repo_config in repo_configs:
         print("Current repo config:", repo_config)
@@ -92,8 +91,7 @@ if __name__ == "__main__":
         issues_data[f"{owner}/{repo}"] = issues
 
     service_account_json = os.environ.get("SERVICE_ACCOUNT_JSON")
-    print("Service Account JSON:", service_account_json)
-    
+        
     update_google_sheets(issues_data, service_account_json)
 
     print("Sheet is updated")
