@@ -1,13 +1,17 @@
 # YAML file for specifying repositories to fetch issues from
 
 repos:
-  # List of repositories in the format "owner/name"
-  #- project-chip/connectedhomeip
-  - CHIP-Specifications/chip-test-plans
-  - CHIP-Specifications/chip-test-scripts
-  - CHIP-Specifications/chip-certification-tool
+  - owner: project-chip
+    name: connectedhomeip
+  - owner: CHIP-Specifications
+    name: chip-test-plans
+  - owner: CHIP-Specifications
+    name: chip-test-scripts
+  - owner: CHIP-Specifications
+    name: chip-certification-tool
 
   # Add more repositories if needed
-  # - owner-name/repository-name
+  #- owner: username
+  #  repo: reponame
   # ...
 
