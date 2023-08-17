@@ -71,7 +71,6 @@ def update_google_sheets(issues_data, service_account_json):
         
         print(f"Updated the sheet {worksheet_name} with {repo_name_only} repo issues")
 
-# ...
 if __name__ == "__main__":
     with open("repos.yml", "r") as yaml_file:
         yaml_data = yaml.safe_load(yaml_file)
@@ -95,4 +94,3 @@ if __name__ == "__main__":
     update_google_sheets(issues_data, service_account_json)
 
     print("Sheet is updated")
-
