@@ -80,8 +80,8 @@ if __name__ == "__main__":
 
     issues_data = {}
     for repo_config in repo_configs:
-        owner = repo_config["owner"]
-        repo = repo_config["repo"]
+        owner = repo_config["owner"]  # Change "owner" to "owner" in your YAML
+        repo = repo_config["name"]    # Change "repo" to "name" in your YAML
         issues = fetch_issues_from_repo(owner, repo, github_token)
         issues_data[f"{owner}/{repo}"] = issues
 
