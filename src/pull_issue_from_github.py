@@ -1,13 +1,11 @@
 import os
-import time
 import requests
 import gspread
-import pandas as pd
-from oauth2client.service_account import ServiceAccountCredentials
 import json
 import yaml
 import logging
 import http.client as http_client
+from oauth2client.service_account import ServiceAccountCredentials
 
 def format_duration(seconds):
     hours, remainder = divmod(seconds, 3600)
@@ -51,18 +49,19 @@ def update_google_sheets(issues_data, service_account_json):
     
     sh = gc.open("Matterissues")
     for repo_name, issues in issues_data.items():
-        worksheet_name = f"{repo_name}_issues"
+        repo_name_only = repo_name.split('/')[1]  # Extract repo name from "owner/repo"
+        worksheet_name = f"{repo_name_only}_issues"
         try:
             worksheet = sh.worksheet(worksheet_name)
             worksheet.clear()
         except gspread.exceptions.WorksheetNotFound:
             worksheet = sh.add_worksheet(title=worksheet_name, rows=str(len(issues) + 1), cols=9)
-            print(f"Created a worksheet named {worksheet_name} for the repo name {repo_name}")
+            print(f"Created a worksheet named {worksheet_name} for the repo name {repo_name_only}")
         
         headers = ["Repo Name", "Issue ID", "State", "Title", "Author", "Label", "Created Date", "Closed Date", "URL"]
         data_rows = []
         for issue in issues:
-            data_rows.append([repo_name, issue.get("number"), issue.get("state"), issue.get("title"),
+            data_rows.append([repo_name_only, issue.get("number"), issue.get("state"), issue.get("title"),
                               issue.get("user", {}).get("login"), ", ".join(label.get("name") for label in issue.get("labels", [])),
                               issue.get("created_at"), issue.get("closed_at"), issue.get("html_url")])
         
@@ -70,7 +69,7 @@ def update_google_sheets(issues_data, service_account_json):
         for row in data_rows:
             worksheet.append_row(row)
         
-        print(f"Updated the sheet {worksheet_name} with {repo_name} repo issues")
+        print(f"Updated the sheet {worksheet_name} with {repo_name_only} repo issues")
 
 if __name__ == "__main__":
     with open("repos.yml", "r") as yaml_file:
